@@ -2,33 +2,54 @@
 using System.Collections;
 using System.Collections.Generic;
 using System;
+using UnityEngine.UI;
 
 public class AppLogic : MonoBehaviour {
+    // GameObjects
     private List<Cylinder> cylinders;
+    GameObject imageTarget;
     GameObject mole;
     Cylinder cylinderWithMole;
+    Text scoreText;
+    Text timeText;
 
+    // Variables
     private List<float> timeKillingMoles = new List<float>();
     private int highScore; // highest score
     private int score; // score at the end of the game
+    private int molesHit = 0;
     private float totalGameTime = 10.0f; //fixed time of game
-  //  private float hitMoleWaitTime = 2.0f; // time player has to hit mole, decreases as game goes on
+    private float maxMoleWaitTime = 1.0f; // time player has to hit mole, decreases as game goes on
+    private float timeLastMoleWasDestroyed;
     float timeMoleAppeared;
-    
-    
+    System.Random rnd = new System.Random();
+
+    bool test;
     // Use this for initialization
     void Start () {
         InitCylinderObjects();
-     //   StartCoroutine(CreateFirstMole());
+        imageTarget = GameObject.Find("ImageTarget");
+
+        timeText = GameObject.Find("timeText").GetComponent<Text>();
+        scoreText = GameObject.Find("scoreText").GetComponent<Text>();
+        scoreText.text = "Score: 0";
+
+
+        //   StartCoroutine(trackTime());
     }
 
 
     // Update is called once per frame
     void Update () {
+        timeText.text = "Time: " + Math.Floor(totalGameTime - Time.time);
 
-        // If there is no mole, show a mole
-        if (!IsAnyMoleActivated() && Time.time < totalGameTime) {
-            ShowMoleOnRandomCylinder();
+        // If there is no mole, create a mole at a random time
+        if (!IsMoleUp() && Time.time < totalGameTime) {            
+            double randomTime = rnd.NextDouble() * maxMoleWaitTime; // based on maxMoleWaitTime
+            print("random time: " + randomTime);
+            if ( Time.time > 1 + timeLastMoleWasDestroyed) {
+                CreateMole();
+            }
         } else {
             if (Input.GetMouseButtonDown(0)) {
                 Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -39,46 +60,56 @@ public class AppLogic : MonoBehaviour {
                     if (hit.transform.gameObject.name == "Mole" || hit.transform.gameObject.name == cylinderWithMole.getName()) {
                         print("Mole hit!");
                         DestroyMole();
+
                     }
                 }
             }
         }
-
-
-
-
     }
 
-    private void ShowMoleOnRandomCylinder() {
-        System.Random rnd = new System.Random();
+
+
+    //private void ShowMoleOnRandomCylinder() {
+    //    int randomInt = rnd.Next(0, cylinders.Count - 1);
+
+
+    //    CreateMole(cyl);
+    //}
+
+    private void CreateMole() {
         int randomInt = rnd.Next(0, cylinders.Count - 1);
-
-        // Get cylinder object from cylinders list
         Cylinder cyl = cylinders[randomInt];
-        CreateMole(cyl.getGameObject().transform.position);
-        cyl.setMoleOn();
-        cylinderWithMole = cyl;
 
-//        Debug.Log("Cylinder with mole: " + cyl.getName() + ", time: " + Time.time);
-    }
-
-    private void CreateMole(Vector3 cylPos) {
         mole = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        mole.transform.position = new Vector3(cylPos.x, cylPos.y, cylPos.z);
+        
+        mole.transform.position = cyl.getGameObject().transform.position;
         mole.transform.localScale = new Vector3(0.02f, 0.02f, 0.02f);
+        mole.transform.parent = imageTarget.transform;
+
         mole.GetComponent<Renderer>().material.color = Color.red;
         mole.name = "Mole";
+
+        cyl.setMoleOn();
+        cylinderWithMole = cyl;
         timeMoleAppeared = Time.time;
+
     }
 
     private void DestroyMole() {
         Destroy(mole);
-        float reactionTime = timeMoleAppeared - Time.time;
-        timeKillingMoles.Add(reactionTime);
-        cylinderWithMole.setMoleOff();
-    }
 
-    private bool IsAnyMoleActivated() {
+        timeLastMoleWasDestroyed = Time.time;
+        float reactionTime = timeMoleAppeared - timeLastMoleWasDestroyed;
+        timeKillingMoles.Add(reactionTime);
+        maxMoleWaitTime -= 0.1f;
+
+        cylinderWithMole.setMoleOff();
+
+        molesHit++;
+        scoreText.text = "Score: " + molesHit;
+    }
+    
+    private bool IsMoleUp() {
         foreach (Cylinder c in cylinders) {
             if (c.getMoleOnState() == true) {
                 return true;
@@ -102,12 +133,12 @@ public class AppLogic : MonoBehaviour {
     }
 
 
-    // Not used
+    // Not used ===================================================
 
-    private IEnumerator CreateFirstMole() {
-        yield return new WaitForSeconds(1);
-        ShowMoleOnRandomCylinder();
-    }
+    //private IEnumerator CreateFirstMole() {
+    //    yield return new WaitForSeconds(1);
+    //    ShowMoleOnRandomCylinder();
+    //}
     //private IEnumerator RandomActivateCylinder() {
     //    GameObject cyl;
     //    while (true) {
@@ -124,4 +155,15 @@ public class AppLogic : MonoBehaviour {
     //    }
     //}
 
+    //private IEnumerator WaitRandomTime() {
+    //    print("wait random time start: " + Time.time);
+
+    //    while (true) {
+    //        if (!IsMoleUp()) {
+    //            CreateMole();
+    //        }
+    //        yield return new WaitForSeconds(maxHitMoleWaitTime);
+    //    }
+
+    //}
 }
