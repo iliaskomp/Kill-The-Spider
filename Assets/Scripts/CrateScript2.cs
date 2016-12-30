@@ -3,8 +3,8 @@ using System.Collections;
 
 public class CrateScript2 : MonoBehaviour {
 
-    GameObject stones;
-    GameObject tarmac;
+    //GameObject stones;
+   // GameObject tarmac;
     Vector3 stonesPos = GameObject.Find("ImageTargetStones").transform.position;
     Vector3 tarmacPos = GameObject.Find("ImageTargetTarmac").transform.position;
     Vector3 pos;
@@ -13,8 +13,8 @@ public class CrateScript2 : MonoBehaviour {
     // Use this for initialization
     void Start () {
         pos = transform.position;
-        stones = GameObject.Find("ImageTargetStones");
-        tarmac = GameObject.Find("ImageTargetTarmac");
+    //    stones = GameObject.Find("ImageTargetStones");
+     //   tarmac = GameObject.Find("ImageTargetTarmac");
     }
 	
 	// Update is called once per frame
