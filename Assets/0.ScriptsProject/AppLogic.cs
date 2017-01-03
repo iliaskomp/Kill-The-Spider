@@ -11,22 +11,22 @@ public class AppLogic : MonoBehaviour {
     GameObject imageTarget;
     GameObject mole;
     Cylinder cylinderWithMole;
-    Text scoreText;
     Text timeText;
+    Text scoreText;
+    Text highScoreText;
     GameObject gameOverText;
 
     // Variables
-    private List<float> timeKillingMoles = new List<float>();
+    //private List<float> timeKillingMoles = new List<float>();
     private int highScore; // highest score
     private int score; // score at the end of the game
-    private int molesHit;
-    private bool gameOver;
-    private bool restart;
+    public bool gameOver; // boolean for if game is over or not
     
     private float currentTime;
-    private float totalGameTime = 10.0f; //fixed time of game
+    private float totalGameTime = 5.0f; //fixed time of game
     private float maxMoleWaitTime = 2.0f; // time player has to hit mole, decreases as game goes on
-    private float timeLastMoleWasDestroyed;
+    private float moleSelfDestroyTime = 0.7f; // Time that mole self destroys if not being killed
+    private float timeLastMoleWasDestroyed; // Time the last mole was destroyed
     private float timeMoleAppeared;
     private System.Random rnd = new System.Random();
 
@@ -34,66 +34,112 @@ public class AppLogic : MonoBehaviour {
     // Use this for initialization
     void Start () {
         InitCylinderObjects();
-
+        
         imageTarget = GameObject.Find("ImageTarget");
         timeText = GameObject.Find("timeText").GetComponent<Text>();
         scoreText = GameObject.Find("scoreText").GetComponent<Text>();
+        highScoreText = GameObject.Find("highScoreText").GetComponent<Text>();
         gameOverText = GameObject.Find("gameOverText");
         
-        molesHit = 0;
+        score = 0;
+        
         scoreText.text = "Score: 0";
-        restart = false;
-
-
-        //   StartCoroutine(trackTime());
+        highScoreText.text = "High Score: " + PlayerPrefs.GetInt("highscore", 0);
     }
 
 
     // Update is called once per frame
     void Update () {
         currentTime = Time.timeSinceLevelLoad;
+
+        // Time/Game is over
+        if (currentTime > totalGameTime) {
+            gameOver = true;
+        }
         // If there is no mole, create a mole at a random time
-        if (!IsMoleUp() && currentTime < totalGameTime) {            
-            double randomTime = rnd.NextDouble() * maxMoleWaitTime; // based on maxMoleWaitTime
-            if (currentTime > randomTime + timeLastMoleWasDestroyed) {
-                CreateMole();
-            }
-        } else {
-            if (Input.GetMouseButtonDown(0)) {
-                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-                RaycastHit hit;
+        if (!gameOver) {
+            timeText.text = "Time: " + Math.Floor(totalGameTime - currentTime);
 
-                if (Physics.Raycast(ray, out hit, 100)) {
-                //    Debug.Log("Game Object clicked: " + hit.transform.gameObject.name);
-                    if (hit.transform.gameObject.name == "Mole" || hit.transform.gameObject.name == cylinderWithMole.getName()) {
-                        print("Mole hit!");
-                        DestroyMole();
+            // If there is no mole, create one at random time/place
+            if (!IsMoleUp() ) {
+                double randomTime = rnd.NextDouble() * maxMoleWaitTime; // based on maxMoleWaitTime
+                if (currentTime > randomTime + timeLastMoleWasDestroyed) {
+                    CreateMole();
+                }
+            // If there is a mole, check if it's been touched 
+            } else {
 
+                double randomSelfDestroyTime = rnd.NextDouble() * moleSelfDestroyTime + moleSelfDestroyTime; // based on maxMoleWaitTime
+
+                if (currentTime > timeMoleAppeared + randomSelfDestroyTime) {
+                    print("mole self destroyed! score: " + score);
+
+                    score = score - 1;
+                    DestroyMole();
+
+                }
+
+                if (Input.GetMouseButtonDown(0)) {
+                    Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                    RaycastHit hit;
+
+                    if (Physics.Raycast(ray, out hit, 100)) {
+                        //    Debug.Log("Game Object clicked: " + hit.transform.gameObject.name);
+                        if (hit.transform.gameObject.name == "Mole" || hit.transform.gameObject.name == cylinderWithMole.getName()) {
+                            print("Mole hit!");
+                            score++;
+
+                            DestroyMole();
+
+                        }
                     }
                 }
             }
         }
 
+        // If game is over
+        if (gameOver) {
+            StoreHighscore(score);
 
-
-        if (currentTime > totalGameTime) {
-            restart = true;
             TextMesh t = (TextMesh)gameOverText.GetComponent(typeof(TextMesh));
-            t.text = "GAME OVER";
-        } else {
-            timeText.text = "Time: " + Math.Floor(totalGameTime - currentTime);
-        }
+            //t.text = "GAME OVER \n (Touch to restart);
+            if (score > PlayerPrefs.GetInt("highscore", 0)) {
+                t.text = "GAME OVER \n(Touch to restart) \nCongrats! \nNew high score!";
+            } else {
+                t.text = "GAME OVER \n(Touch to restart)";
+            }
 
-        if (restart) {
             if (Input.GetKeyDown(KeyCode.R)) {
                 Application.LoadLevel(Application.loadedLevel);
+            }
+
+            if (Input.GetMouseButtonDown(0)) {
+                Application.LoadLevel(Application.loadedLevel);
+                print("touch");
             }
         }
     }
 
 
 
+    private void createRestartButton() {
+        //var button = Instantiate(RoomButton, Vector3.zero, Quaternion.identity) as Button;
+        //var rectTransform = button.GetComponent<RectTransform>();
+        //rectTransform.SetParent(Canvas.transform);
+        //rectTransform.offsetMin = Vector2.zero;
+        //rectTransform.offsetMax = Vector2.zero;
+        //button.onClick.AddListener(SpawnPlayer);\
 
+        
+
+        //mole.transform.position = cyl.getGameObject().transform.position;
+        //mole.transform.localScale = new Vector3(0.02f, 0.02f, 0.02f);
+        //mole.transform.parent = imageTarget.transform;
+
+        //mole.GetComponent<Renderer>().material.color = Color.red;
+        //mole.name = "Mole";
+
+    }
 
     private void CreateMole() {
         int randomInt = rnd.Next(0, cylinders.Count - 1);
@@ -119,15 +165,16 @@ public class AppLogic : MonoBehaviour {
 
         timeLastMoleWasDestroyed = currentTime;
         float reactionTime = timeMoleAppeared - timeLastMoleWasDestroyed;
-        timeKillingMoles.Add(reactionTime);
+      //  timeKillingMoles.Add(reactionTime);
         maxMoleWaitTime -= 0.1f;
 
         cylinderWithMole.setMoleOff();
 
-        molesHit++;
-        scoreText.text = "Score: " + molesHit;
+        scoreText.text = "Score: " + score;
+        
+
     }
-    
+
     private bool IsMoleUp() {
         foreach (Cylinder c in cylinders) {
             if (c.getMoleOnState() == true) {
@@ -151,6 +198,14 @@ public class AppLogic : MonoBehaviour {
         cylinders.Add(new Cylinder("Cylinder (8)"));
     }
 
+    void StoreHighscore(int newHighscore) {
+        
+        int oldHighscore = PlayerPrefs.GetInt("highscore", 0);
+        if (newHighscore > oldHighscore) {
+            PlayerPrefs.SetInt("highscore", newHighscore);
+        }
+
+    }
 
     // Not used ===================================================
 
