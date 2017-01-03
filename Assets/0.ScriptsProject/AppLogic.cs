@@ -15,9 +15,9 @@ public class AppLogic : MonoBehaviour {
     Text scoreText;
     Text highScoreText;
     GameObject gameOverText;
-
+    GameObject zombieRig;
+    
     // Variables
-    //private List<float> timeKillingMoles = new List<float>();
     private int highScore; // highest score
     private int score; // score at the end of the game
     public bool gameOver; // boolean for if game is over or not
@@ -41,6 +41,11 @@ public class AppLogic : MonoBehaviour {
         highScoreText = GameObject.Find("highScoreText").GetComponent<Text>();
         gameOverText = GameObject.Find("gameOverText");
         
+        
+        // mole = GameObject.Find("EmptyMoleObject");
+        mole = GameObject.Find("spider");
+        mole.SetActive(false);
+
         score = 0;
         
         scoreText.text = "Score: 0";
@@ -145,14 +150,18 @@ public class AppLogic : MonoBehaviour {
         int randomInt = rnd.Next(0, cylinders.Count - 1);
         Cylinder cyl = cylinders[randomInt];
 
-        mole = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        
-        mole.transform.position = cyl.getGameObject().transform.position;
-        mole.transform.localScale = new Vector3(0.02f, 0.02f, 0.02f);
-        mole.transform.parent = imageTarget.transform;
+        GameObject ZombieRig = GameObject.Find("ZombieRig");
+        //mole = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        //mole = (GameObject)Instantiate(ZombieRig, cyl.getGameObject().transform.position, Quaternion.identity);
 
-        mole.GetComponent<Renderer>().material.color = Color.red;
-        mole.name = "Mole";
+        Vector3 cylPos = cyl.getGameObject().transform.position;
+        mole.transform.position = new Vector3(cylPos.x, cylPos.y, cylPos.z);
+       // mole.transform.localScale = new Vector3(0.02f, 0.02f, 0.02f);
+        mole.transform.parent = imageTarget.transform;
+        mole.SetActive(true);
+
+        //mole.GetComponent<Renderer>().material.color = Color.red;
+        //mole.name = "Mole";
 
         cyl.setMoleOn();
         cylinderWithMole = cyl;
@@ -161,11 +170,10 @@ public class AppLogic : MonoBehaviour {
     }
 
     private void DestroyMole() {
-        Destroy(mole);
-
+        //Destroy(mole);
+        mole.SetActive(false);
         timeLastMoleWasDestroyed = currentTime;
         float reactionTime = timeMoleAppeared - timeLastMoleWasDestroyed;
-      //  timeKillingMoles.Add(reactionTime);
         maxMoleWaitTime -= 0.1f;
 
         cylinderWithMole.setMoleOff();
