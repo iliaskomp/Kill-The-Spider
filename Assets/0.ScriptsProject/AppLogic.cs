@@ -16,11 +16,15 @@ public class AppLogic : MonoBehaviour {
     Text highScoreText;
     GameObject gameOverText;
     GameObject zombieRig;
-    
+
+    AudioSource audioSrc;
+    public AudioClip moleAppearsSound;
+    public AudioClip moleDestroyedSound;
+
     // Variables
     private int highScore; // highest score
     private int score; // score at the end of the game
-    public bool gameOver; // boolean for if game is over or not
+    public static bool gameOver; // boolean for if game is over or not
     
     private float currentTime;
     private float totalGameTime = 5.0f; //fixed time of game
@@ -33,6 +37,8 @@ public class AppLogic : MonoBehaviour {
     bool test;
     // Use this for initialization
     void Start () {
+
+        gameOver = false;
         InitCylinderObjects();
         
         imageTarget = GameObject.Find("ImageTarget");
@@ -40,16 +46,16 @@ public class AppLogic : MonoBehaviour {
         scoreText = GameObject.Find("scoreText").GetComponent<Text>();
         highScoreText = GameObject.Find("highScoreText").GetComponent<Text>();
         gameOverText = GameObject.Find("gameOverText");
-        
-        
-        // mole = GameObject.Find("EmptyMoleObject");
+
         mole = GameObject.Find("spider");
         mole.SetActive(false);
-
         score = 0;
         
         scoreText.text = "Score: 0";
         highScoreText.text = "High Score: " + PlayerPrefs.GetInt("highscore", 0);
+
+        audioSrc = GameObject.Find("AudioSource").GetComponent<AudioSource>();
+        audioSrc.Play();
     }
 
 
@@ -77,7 +83,6 @@ public class AppLogic : MonoBehaviour {
                 double randomSelfDestroyTime = rnd.NextDouble() * moleSelfDestroyTime + moleSelfDestroyTime; // based on maxMoleWaitTime
 
                 if (currentTime > timeMoleAppeared + randomSelfDestroyTime) {
-                    print("mole self destroyed! score: " + score);
 
                     score = score - 1;
                     DestroyMole();
@@ -91,8 +96,8 @@ public class AppLogic : MonoBehaviour {
                     if (Physics.Raycast(ray, out hit, 100)) {
                         //    Debug.Log("Game Object clicked: " + hit.transform.gameObject.name);
                         if (hit.transform.gameObject.name == "Mole" || hit.transform.gameObject.name == cylinderWithMole.getName()) {
-                            print("Mole hit!");
                             score++;
+                            audioSrc.PlayOneShot(moleDestroyedSound);
 
                             DestroyMole();
 
@@ -105,7 +110,7 @@ public class AppLogic : MonoBehaviour {
         // If game is over
         if (gameOver) {
             StoreHighscore(score);
-
+            audioSrc.Stop();
             TextMesh t = (TextMesh)gameOverText.GetComponent(typeof(TextMesh));
             //t.text = "GAME OVER \n (Touch to restart);
             if (score > PlayerPrefs.GetInt("highscore", 0)) {
@@ -119,32 +124,16 @@ public class AppLogic : MonoBehaviour {
             }
 
             if (Input.GetMouseButtonDown(0)) {
-                Application.LoadLevel(Application.loadedLevel);
-                print("touch");
+               // Application.LoadLevel(Application.loadedLevel);
+                UnityEngine.SceneManagement.SceneManager.LoadScene("ProjectScene");
             }
         }
     }
 
+   // private void OnLevelWasLoaded(int level) {
+   ////     GameObject.Find("AudioSource").GetComponent<AudioSource>().Play();
 
-
-    private void createRestartButton() {
-        //var button = Instantiate(RoomButton, Vector3.zero, Quaternion.identity) as Button;
-        //var rectTransform = button.GetComponent<RectTransform>();
-        //rectTransform.SetParent(Canvas.transform);
-        //rectTransform.offsetMin = Vector2.zero;
-        //rectTransform.offsetMax = Vector2.zero;
-        //button.onClick.AddListener(SpawnPlayer);\
-
-        
-
-        //mole.transform.position = cyl.getGameObject().transform.position;
-        //mole.transform.localScale = new Vector3(0.02f, 0.02f, 0.02f);
-        //mole.transform.parent = imageTarget.transform;
-
-        //mole.GetComponent<Renderer>().material.color = Color.red;
-        //mole.name = "Mole";
-
-    }
+   // }
 
     private void CreateMole() {
         int randomInt = rnd.Next(0, cylinders.Count - 1);
@@ -154,14 +143,15 @@ public class AppLogic : MonoBehaviour {
         //mole = GameObject.CreatePrimitive(PrimitiveType.Cube);
         //mole = (GameObject)Instantiate(ZombieRig, cyl.getGameObject().transform.position, Quaternion.identity);
 
-        Vector3 cylPos = cyl.getGameObject().transform.position;
-        mole.transform.position = new Vector3(cylPos.x, cylPos.y, cylPos.z);
+        mole.transform.position = cyl.getGameObject().transform.position;
        // mole.transform.localScale = new Vector3(0.02f, 0.02f, 0.02f);
         mole.transform.parent = imageTarget.transform;
         mole.SetActive(true);
+        audioSrc.PlayOneShot(moleAppearsSound);
 
         //mole.GetComponent<Renderer>().material.color = Color.red;
         //mole.name = "Mole";
+
 
         cyl.setMoleOn();
         cylinderWithMole = cyl;
@@ -179,7 +169,6 @@ public class AppLogic : MonoBehaviour {
         cylinderWithMole.setMoleOff();
 
         scoreText.text = "Score: " + score;
-        
 
     }
 
@@ -255,4 +244,28 @@ public class AppLogic : MonoBehaviour {
 
     //    CreateMole(cyl);
     //}
+
+ //   private void createRestartButton() {
+        //var button = Instantiate(RoomButton, Vector3.zero, Quaternion.identity) as Button;
+        //var rectTransform = button.GetComponent<RectTransform>();
+        //rectTransform.SetParent(Canvas.transform);
+        //rectTransform.offsetMin = Vector2.zero;
+        //rectTransform.offsetMax = Vector2.zero;
+        //button.onClick.AddListener(SpawnPlayer);\
+
+
+
+        //mole.transform.position = cyl.getGameObject().transform.position;
+        //mole.transform.localScale = new Vector3(0.02f, 0.02f, 0.02f);
+        //mole.transform.parent = imageTarget.transform;
+
+        //mole.GetComponent<Renderer>().material.color = Color.red;
+        //mole.name = "Mole";
+
+//    }
+
+
+    public static bool isGameOver() {
+        return gameOver;
+    }
 }
