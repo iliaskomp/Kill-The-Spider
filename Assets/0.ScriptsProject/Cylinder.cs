@@ -5,28 +5,28 @@ using System.Collections;
 public class Cylinder { 
     private string name;
     private GameObject gameObject;
-    private bool isMoleOn;
+    private bool isSpiderOn;
 
     public Cylinder(string name) {
         this.name = name;
         this.gameObject = GameObject.Find(name);
-        isMoleOn = false;
+        isSpiderOn = false;
     }
 
 
 
 
     // Setters and Getters
-    public void setMoleOn() {
-        isMoleOn = true;
+    public void setSpiderOn() {
+        isSpiderOn = true;
     }
 
-    public void setMoleOff() {
-        isMoleOn = false;
+    public void setSpiderOff() {
+        isSpiderOn = false;
     }
 
-    public bool getMoleOnState() {
-        return isMoleOn;
+    public bool getSpiderOnState() {
+        return isSpiderOn;
     }
 
     public GameObject getGameObject() {

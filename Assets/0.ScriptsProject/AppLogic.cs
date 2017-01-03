@@ -9,48 +9,47 @@ public class AppLogic : MonoBehaviour {
     // GameObjects
     private List<Cylinder> cylinders;
     GameObject imageTarget;
-    GameObject mole;
-    Cylinder cylinderWithMole;
+    GameObject spider;
+    Cylinder cylinderWithSpider;
     Text timeText;
     Text scoreText;
     Text highScoreText;
     GameObject gameOverText;
-    GameObject zombieRig;
-
+    
+    // Audio
     AudioSource audioSrc;
-    public AudioClip moleAppearsSound;
-    public AudioClip moleDestroyedSound;
+    public AudioClip spiderAppearsSound;
+    public AudioClip spiderDestroyedSound;
 
     // Variables
     private int highScore; // highest score
     private int score; // score at the end of the game
     public static bool gameOver; // boolean for if game is over or not
     
+    // Time variables
     private float currentTime;
     private float totalGameTime = 5.0f; //fixed time of game
-    private float maxMoleWaitTime = 2.0f; // time player has to hit mole, decreases as game goes on
-    private float moleSelfDestroyTime = 0.7f; // Time that mole self destroys if not being killed
-    private float timeLastMoleWasDestroyed; // Time the last mole was destroyed
-    private float timeMoleAppeared;
-    private System.Random rnd = new System.Random();
+    private float maxSpiderWaitTime = 2.0f; // time player has to hit spider, decreases as game goes on
+    private float spiderSelfDestroyTime = 0.7f; // Time that spider self destroys if not being killed
+    private float timeLastSpiderWasDestroyed; // Time the last spider was destroyed
+    private float timeSpiderAppeared;
 
-    bool test;
+    private System.Random rnd = new System.Random();
     // Use this for initialization
     void Start () {
 
         gameOver = false;
         InitCylinderObjects();
         
-        imageTarget = GameObject.Find("ImageTarget");
-        timeText = GameObject.Find("timeText").GetComponent<Text>();
-        scoreText = GameObject.Find("scoreText").GetComponent<Text>();
+        imageTarget   = GameObject.Find("ImageTarget");
+        timeText      = GameObject.Find("timeText").GetComponent<Text>();
+        scoreText     = GameObject.Find("scoreText").GetComponent<Text>();
         highScoreText = GameObject.Find("highScoreText").GetComponent<Text>();
-        gameOverText = GameObject.Find("gameOverText");
+        gameOverText  = GameObject.Find("gameOverText");
+        spider        = GameObject.Find("spider");
+        spider.SetActive(false);
 
-        mole = GameObject.Find("spider");
-        mole.SetActive(false);
-        score = 0;
-        
+        score = 0;        
         scoreText.text = "Score: 0";
         highScoreText.text = "High Score: " + PlayerPrefs.GetInt("highscore", 0);
 
@@ -67,25 +66,25 @@ public class AppLogic : MonoBehaviour {
         if (currentTime > totalGameTime) {
             gameOver = true;
         }
-        // If there is no mole, create a mole at a random time
+        // If there is no spider, create a spider at a random time
         if (!gameOver) {
             timeText.text = "Time: " + Math.Floor(totalGameTime - currentTime);
 
-            // If there is no mole, create one at random time/place
-            if (!IsMoleUp() ) {
-                double randomTime = rnd.NextDouble() * maxMoleWaitTime; // based on maxMoleWaitTime
-                if (currentTime > randomTime + timeLastMoleWasDestroyed) {
-                    CreateMole();
+            // If there is no spider, create one at random time/place
+            if (!IsSpiderUp() ) {
+                double randomTime = rnd.NextDouble() * maxSpiderWaitTime; // based on maxspiderWaitTime
+                if (currentTime > randomTime + timeLastSpiderWasDestroyed) {
+                    CreateSpider();
                 }
-            // If there is a mole, check if it's been touched 
+            // If there is a spider, check if it's been touched 
             } else {
 
-                double randomSelfDestroyTime = rnd.NextDouble() * moleSelfDestroyTime + moleSelfDestroyTime; // based on maxMoleWaitTime
+                double randomSelfDestroyTime = rnd.NextDouble() * spiderSelfDestroyTime + spiderSelfDestroyTime; // based on maxspiderWaitTime
 
-                if (currentTime > timeMoleAppeared + randomSelfDestroyTime) {
+                if (currentTime > timeSpiderAppeared + randomSelfDestroyTime) {
 
                     score = score - 1;
-                    DestroyMole();
+                    DestroySpider();
 
                 }
 
@@ -95,11 +94,11 @@ public class AppLogic : MonoBehaviour {
 
                     if (Physics.Raycast(ray, out hit, 100)) {
                         //    Debug.Log("Game Object clicked: " + hit.transform.gameObject.name);
-                        if (hit.transform.gameObject.name == "Mole" || hit.transform.gameObject.name == cylinderWithMole.getName()) {
+                        if (hit.transform.gameObject.name == "spider" || hit.transform.gameObject.name == cylinderWithSpider.getName()) {
                             score++;
-                            audioSrc.PlayOneShot(moleDestroyedSound);
+                            audioSrc.PlayOneShot(spiderDestroyedSound);
 
-                            DestroyMole();
+                            DestroySpider();
 
                         }
                     }
@@ -118,9 +117,8 @@ public class AppLogic : MonoBehaviour {
             } else {
                 t.text = "GAME OVER \n(Touch to restart)";
             }
-
             if (Input.GetKeyDown(KeyCode.R)) {
-                Application.LoadLevel(Application.loadedLevel);
+                UnityEngine.SceneManagement.SceneManager.LoadScene("ProjectScene");
             }
 
             if (Input.GetMouseButtonDown(0)) {
@@ -130,51 +128,41 @@ public class AppLogic : MonoBehaviour {
         }
     }
 
-   // private void OnLevelWasLoaded(int level) {
-   ////     GameObject.Find("AudioSource").GetComponent<AudioSource>().Play();
-
-   // }
-
-    private void CreateMole() {
+    private void CreateSpider() {
         int randomInt = rnd.Next(0, cylinders.Count - 1);
         Cylinder cyl = cylinders[randomInt];
 
-        GameObject ZombieRig = GameObject.Find("ZombieRig");
-        //mole = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        //mole = (GameObject)Instantiate(ZombieRig, cyl.getGameObject().transform.position, Quaternion.identity);
+        //cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
 
-        mole.transform.position = cyl.getGameObject().transform.position;
-       // mole.transform.localScale = new Vector3(0.02f, 0.02f, 0.02f);
-        mole.transform.parent = imageTarget.transform;
-        mole.SetActive(true);
-        audioSrc.PlayOneShot(moleAppearsSound);
+        spider.transform.position = cyl.getGameObject().transform.position;
+        spider.transform.parent = imageTarget.transform;
+        spider.SetActive(true);
+        audioSrc.PlayOneShot(spiderAppearsSound);
 
-        //mole.GetComponent<Renderer>().material.color = Color.red;
-        //mole.name = "Mole";
+        spider.name = "Spider";
 
-
-        cyl.setMoleOn();
-        cylinderWithMole = cyl;
-        timeMoleAppeared = currentTime;
+        cyl.setSpiderOn();
+        cylinderWithSpider = cyl;
+        timeSpiderAppeared = currentTime;
 
     }
 
-    private void DestroyMole() {
-        //Destroy(mole);
-        mole.SetActive(false);
-        timeLastMoleWasDestroyed = currentTime;
-        float reactionTime = timeMoleAppeared - timeLastMoleWasDestroyed;
-        maxMoleWaitTime -= 0.1f;
+    private void DestroySpider() {
+        //Destroy(spider);
+        spider.SetActive(false);
+        timeLastSpiderWasDestroyed = currentTime;
+        float reactionTime = timeSpiderAppeared - timeLastSpiderWasDestroyed;
+        maxSpiderWaitTime -= 0.1f;
 
-        cylinderWithMole.setMoleOff();
+        cylinderWithSpider.setSpiderOff();
 
         scoreText.text = "Score: " + score;
 
     }
 
-    private bool IsMoleUp() {
+    private bool IsSpiderUp() {
         foreach (Cylinder c in cylinders) {
-            if (c.getMoleOnState() == true) {
+            if (c.getSpiderOnState() == true) {
                 return true;
             }
         }
@@ -204,68 +192,7 @@ public class AppLogic : MonoBehaviour {
 
     }
 
-    // Not used ===================================================
-
-    //private IEnumerator CreateFirstMole() {
-    //    yield return new WaitForSeconds(1);
-    //    ShowMoleOnRandomCylinder();
-    //}
-    //private IEnumerator RandomActivateCylinder() {
-    //    GameObject cyl;
-    //    while (true) {
-    //        System.Random rnd = new System.Random();
-    //        int randomInt = rnd.Next(0, cylinders.Count - 1);
-    //        String randomCylinder = "Cylinder (" + randomInt + ")";
-    //        Debug.Log("Random Cylinder: " + randomCylinder);
-
-    //        cyl = GameObject.Find(randomCylinder);
-    //        cyl.GetComponent<Renderer>().material.color = Color.red;
-    //        Debug.Log(Time.time);
-    //        yield return new WaitForSeconds(3);
-
-    //    }
-    //}
-
-    //private IEnumerator WaitRandomTime() {
-    //    print("wait random time start: " + Time.time);
-
-    //    while (true) {
-    //        if (!IsMoleUp()) {
-    //            CreateMole();
-    //        }
-    //        yield return new WaitForSeconds(maxHitMoleWaitTime);
-    //    }
-
-    //}
-
-    //private void ShowMoleOnRandomCylinder() {
-    //    int randomInt = rnd.Next(0, cylinders.Count - 1);
-
-
-    //    CreateMole(cyl);
-    //}
-
- //   private void createRestartButton() {
-        //var button = Instantiate(RoomButton, Vector3.zero, Quaternion.identity) as Button;
-        //var rectTransform = button.GetComponent<RectTransform>();
-        //rectTransform.SetParent(Canvas.transform);
-        //rectTransform.offsetMin = Vector2.zero;
-        //rectTransform.offsetMax = Vector2.zero;
-        //button.onClick.AddListener(SpawnPlayer);\
-
-
-
-        //mole.transform.position = cyl.getGameObject().transform.position;
-        //mole.transform.localScale = new Vector3(0.02f, 0.02f, 0.02f);
-        //mole.transform.parent = imageTarget.transform;
-
-        //mole.GetComponent<Renderer>().material.color = Color.red;
-        //mole.name = "Mole";
-
-//    }
-
-
-    public static bool isGameOver() {
+    public static bool IsGameOver() {
         return gameOver;
     }
 }

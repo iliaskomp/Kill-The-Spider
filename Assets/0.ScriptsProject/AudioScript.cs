@@ -10,10 +10,9 @@ public class AudioScript : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-        gameOver = AppLogic.isGameOver();
+        gameOver = AppLogic.IsGameOver();
 
         if (gameOver) {
-
         }
     }
 }
