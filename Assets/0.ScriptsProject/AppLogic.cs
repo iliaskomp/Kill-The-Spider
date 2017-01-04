@@ -14,7 +14,8 @@ public class AppLogic : MonoBehaviour {
     Text timeText;
     Text scoreText;
     Text highScoreText;
-    GameObject gameOverText;
+    Text gameOverText;
+    Text startGameText;
     
     // Audio
     AudioSource audioSrc;
@@ -25,7 +26,8 @@ public class AppLogic : MonoBehaviour {
     private int highScore; // highest score
     private int score; // score at the end of the game
     public static bool gameOver; // boolean for if game is over or not
-    
+    private bool toStartGame;
+
     // Time variables
     private float currentTime;
     private float totalGameTime = 5.0f; //fixed time of game
@@ -33,25 +35,31 @@ public class AppLogic : MonoBehaviour {
     private float spiderSelfDestroyTime = 0.7f; // Time that spider self destroys if not being killed
     private float timeLastSpiderWasDestroyed; // Time the last spider was destroyed
     private float timeSpiderAppeared;
+    private float startTime;
 
     private System.Random rnd = new System.Random();
     // Use this for initialization
     void Start () {
 
         gameOver = false;
+        toStartGame = true;
+
         InitCylinderObjects();
         
         imageTarget   = GameObject.Find("ImageTarget");
         timeText      = GameObject.Find("timeText").GetComponent<Text>();
         scoreText     = GameObject.Find("scoreText").GetComponent<Text>();
         highScoreText = GameObject.Find("highScoreText").GetComponent<Text>();
-        gameOverText  = GameObject.Find("gameOverText");
-        spider        = GameObject.Find("spider");
+        gameOverText  = GameObject.Find("gameOverText").GetComponent<Text>();
+        startGameText = GameObject.Find("startGameText").GetComponent<Text>();
+
+        spider = GameObject.Find("spider");
         spider.SetActive(false);
 
         score = 0;        
         scoreText.text = "Score: 0";
         highScoreText.text = "High Score: " + PlayerPrefs.GetInt("highscore", 0);
+        startTime = 1000;
 
         audioSrc = GameObject.Find("AudioSource").GetComponent<AudioSource>();
         audioSrc.Play();
@@ -60,14 +68,37 @@ public class AppLogic : MonoBehaviour {
 
     // Update is called once per frame
     void Update () {
+        
+
+        if (toStartGame) {
+            startGameText.text = "Touch to start playing! \n Current High Score: " + PlayerPrefs.GetInt("highscore", 0);
+            if (Input.GetMouseButtonDown(0) || Input.GetKeyDown(KeyCode.R)) {
+                toStartGame = false;
+                startGameText.text = "";
+                print("Time when touch to start: " + Time.time);
+                startTime = Time.timeSinceLevelLoad;
+
+            }
+        }
+
+
+        // start time: 8 seconds since level loaded
+        // total game time : 5 seconds
+        // game range: 8 - 13 seconds
+
+        print("Current Time: " + Time.timeSinceLevelLoad);
+        print("Start game time: " + startTime);
+        
+
         currentTime = Time.timeSinceLevelLoad;
 
         // Time/Game is over
-        if (currentTime > totalGameTime) {
+        //if 13 > 5 seconds + 8 seconds
+        if (currentTime > startTime + totalGameTime) {
             gameOver = true;
         }
         // If there is no spider, create a spider at a random time
-        if (!gameOver) {
+        if (!gameOver && !toStartGame) {
             timeText.text = "Time: " + Math.Floor(totalGameTime - currentTime);
 
             // If there is no spider, create one at random time/place
@@ -110,19 +141,17 @@ public class AppLogic : MonoBehaviour {
         if (gameOver) {
             StoreHighscore(score);
             audioSrc.Stop();
-            TextMesh t = (TextMesh)gameOverText.GetComponent(typeof(TextMesh));
+            //TextMesh t = (TextMesh)gameOverText.GetComponent(typeof(TextMesh));
+            
             //t.text = "GAME OVER \n (Touch to restart);
             if (score > PlayerPrefs.GetInt("highscore", 0)) {
-                t.text = "GAME OVER \n(Touch to restart) \nCongrats! \nNew high score!";
+                gameOverText.text = "GAME OVER \n(Touch to restart) \nCongrats! \nNew high score!";
             } else {
-                t.text = "GAME OVER \n(Touch to restart)";
-            }
-            if (Input.GetKeyDown(KeyCode.R)) {
-                UnityEngine.SceneManagement.SceneManager.LoadScene("ProjectScene");
+                gameOverText.text = "GAME OVER \n(Touch to restart)";
             }
 
-            if (Input.GetMouseButtonDown(0)) {
-               // Application.LoadLevel(Application.loadedLevel);
+            // Restart game if screen touched or pressed R.
+            if (Input.GetMouseButtonDown(0) || Input.GetKeyDown(KeyCode.R)) {
                 UnityEngine.SceneManagement.SceneManager.LoadScene("ProjectScene");
             }
         }
