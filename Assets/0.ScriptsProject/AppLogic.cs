@@ -30,7 +30,7 @@ public class AppLogic : MonoBehaviour {
 
     // Time variables
     private float currentTime;
-    private float totalGameTime = 5.0f; //fixed time of game
+    private float totalGameTime = 20.0f; //fixed time of game
     private float maxSpiderWaitTime = 2.0f; // time player has to hit spider, decreases as game goes on
     private float spiderSelfDestroyTime = 0.7f; // Time that spider self destroys if not being killed
     private float timeLastSpiderWasDestroyed; // Time the last spider was destroyed
@@ -71,7 +71,7 @@ public class AppLogic : MonoBehaviour {
         
 
         if (toStartGame) {
-            startGameText.text = "Touch to start playing! \n Current High Score: " + PlayerPrefs.GetInt("highscore", 0);
+            startGameText.text = "Touch to start playing! \nCurrent High Score: " + PlayerPrefs.GetInt("highscore", 0);
             if (Input.GetMouseButtonDown(0) || Input.GetKeyDown(KeyCode.R)) {
                 toStartGame = false;
                 startGameText.text = "";
@@ -145,7 +145,7 @@ public class AppLogic : MonoBehaviour {
             
             //t.text = "GAME OVER \n (Touch to restart);
             if (score > PlayerPrefs.GetInt("highscore", 0)) {
-                gameOverText.text = "GAME OVER \n(Touch to restart) \nCongrats! \nNew high score!";
+                gameOverText.text = "GAME OVER \n(Touch to restart) \nCongrats! New high score!";
             } else {
                 gameOverText.text = "GAME OVER \n(Touch to restart)";
             }
