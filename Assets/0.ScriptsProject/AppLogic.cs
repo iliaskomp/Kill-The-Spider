@@ -69,7 +69,7 @@ public class AppLogic : MonoBehaviour {
     // Update is called once per frame
     void Update () {
         
-
+        // Waiting to touch to start game
         if (toStartGame) {
             startGameText.text = "Touch to start playing! \nCurrent High Score: " + PlayerPrefs.GetInt("highscore", 0);
             if (Input.GetMouseButtonDown(0) || Input.GetKeyDown(KeyCode.R)) {
@@ -80,20 +80,9 @@ public class AppLogic : MonoBehaviour {
 
             }
         }
-
-
-        // start time: 8 seconds since level loaded
-        // total game time : 5 seconds
-        // game range: 8 - 13 seconds
-
-        print("Current Time: " + Time.timeSinceLevelLoad);
-        print("Start game time: " + startTime);
-        
-
         currentTime = Time.timeSinceLevelLoad;
 
         // Time/Game is over
-        //if 13 > 5 seconds + 8 seconds
         if (currentTime > startTime + totalGameTime) {
             gameOver = true;
         }
