@@ -1,4 +1,5 @@
-# Kill-The-Spider
+# Kill the Spider
+
 Augmented Reality Project made with Unity/Vuforia
 
 A simple reimagination of the popular Whack-A-Mole game but with spiders. 
